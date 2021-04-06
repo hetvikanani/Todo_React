@@ -1,5 +1,6 @@
-import reactDom from 'react-dom'
-import React, { Component } from 'react'
+import reactDom from "react-dom";
+import React, { Component } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import {
   Alert,
   InputGroup,
@@ -8,118 +9,87 @@ import {
   Input,
   Button,
   Table,
-} from 'reactstrap'
+} from "reactstrap";
 
-import { Todostyle } from './style'
+import { Todostyle } from "./style";
 class Todo extends Component {
-  constructor() {
-    super()
-    this.state = {
-      text: '',
-      editID:-1,
-      tblData: [],
-    }
-  }
 
-  addText = () => {
-    try {
-      let data = this.state.tblData
-    if(this.state.editID>-1){
-      data.splice(this.state.editID,1,this.state.text);
-    }
-    else{ data.push(this.state.text.trim());}
-      this.setState({
-        tblData: data,
-        text: '',editID:-1
-      })
-    } catch (error) {
-      console.log(error)
+  state = {
+    name: "",
+    data: [],
+    isUpdate: false,
+    updataId: ''
+  }
+  addData = () => {
+    if (this.state.name) {
+      let todo = {};
+      todo.name = this.state.name
+      todo.id = uuidv4()
+      this.setState({ data: [...this.state.data, todo], name: "" })
     }
   }
-  handleChange = (e) => {
-    this.setState({
-      text: e.target.value,
+  deleteData = (id) => {
+    let data = [...this.state.data]
+    const b = data.filter((h) => h.id !== id)
+    this.setState({ data: b })
+  }
+  updataData = (id) => {
+    let data = [...this.state.data]
+    const b = data.filter((h) => h.id === id)
+    this.setState({ name: b[0].name, isUpdate: true, updataId: id })
+  }
+  originalUpdate = () => {
+    console.log(this.state.updataId)
+    let data = [...this.state.data]
+    const b = data.map((h) => {
+      if (h.id === this.state.updataId) {
+        h.name = this.state.name
+        
+      }
+      return h;
     })
-  }
-  editRow = (i) => {
-    try {
-      this.setState({
-        text: this.state.tblData[i],editID:i
-      })
-      
-    } catch (error) {
-      console.log(error);
-    }
-  }
-  deleteRow = (i) => {
-    try {
-      let data = this.state.tblData
-      data.splice(i,1)
-      this.setState({tblData: data})
-    } catch (error) {
-      console.log(error);
-    }
-  }
-  clearText = (e) => {
-    this.setState({
-      text: '',editID:-1
-    })
-  }
-  tableUI = () => {
-    try {
-      let UI = []
-      this.state.tblData.forEach((l, i) => {
-        UI.push(
-          <tr>
-            <td>{i + 1}</td>
-            <td>{l}</td>
-            <td><Button color="danger" onClick={()=>this.deleteRow(i)}>Delete</Button>
-            <Button color="warning" className="edit" onClick={()=>this.editRow(i)}>Edit</Button>
-            </td>
-          </tr>,
-        )
-      })
-      return <>{UI}</>
-    } catch (error) {
-      console.log(error)
-    }
+    this.setState({ data: b, isUpdate: false, name: "", updataId: '' })
   }
   render() {
     return (
       <Todostyle>
+        {console.log(this.state, "aaaaa")}
         <h2>My To Do List</h2>
         <div className="box">
           <div className="input">
             <InputGroup>
-              <Input
-                placeholder="Enter Text"
-                value={this.state.text}
-                onChange={this.handleChange}
-              />
+              <Input value={this.state.name} placeholder="Enter Text" onChange={(e) => { this.setState({ name: e.target.value }) }} />
             </InputGroup>
-            <Button color="secondary" onClick={this.addText}>
-              {this.state.editID>-1?"Edit":"Add"}
-            </Button>
-            {this.state.text.trim() !== '' && (
-              <Button color="secondary" onClick={this.clearText}>
-                Clear
-              </Button>
-            )}
+            {!this.state.isUpdate ? <Button color="secondary" onClick={this.addData}>Add</Button> : <Button color="secondary" onClick={this.originalUpdate}>update</Button>}
           </div>
         </div>
-        <Table>
+        <Table dark>
           <thead>
             <tr>
               <th>#</th>
               <th>TODO LIST</th>
               <th>Action</th>
             </tr>
-            {this.tableUI()}
           </thead>
+          <tbody>
+            {this.state.data.map((x, i) => {
+              return <>
+                <tr>
+                  <th scope="row">{i + 1}</th>
+                  <td>{x.name}</td>
+                  <td><Button color="primary" onClick={() => this.deleteData(x.id)}>delete</Button>
+                    <Button color="secondary" onClick={() => this.updataData(x.id)}>edit</Button></td>
+                </tr>
+              </>
+
+            })}
+
+          </tbody>
+
         </Table>
       </Todostyle>
-    )
+    );
   }
 }
 
-export default Todo
+export default Todo;
